@@ -15,6 +15,6 @@ enyo.kind({
 	},
 	initComponents: function() {
 		this.inherited(arguments);
-		this._childKind.prototype.tag = null;
+		this.defaultKind.prototype.tag = null;
 	}
 });
