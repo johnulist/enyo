@@ -813,14 +813,18 @@ enyo.kind({
 		}
 	},
 	renderReusingNode: function () {
-		if (this.children.length) {
-			for (var i=0, c; (c=this.children[i]); ++i) {
-				c.renderReusingNode();
+		if (this.tag === null || this.generated) {
+			if (this.children.length) {
+				for (var i=0, c; (c=this.children[i]); ++i) {
+					c.renderReusingNode();
+				}
+			} else {
+				if (this.generated && this.hasNode()) {
+					enyo.dom.setInnerHtml(this.node, this.generateInnerHtml());
+				}
 			}
 		} else {
-			if (this.generated && (this.node = this.hasNode())) {
-				enyo.dom.setInnerHtml(this.node, this.generateInnerHtml());
-			}
+			this.render();
 		}
 	},
 	renderStyles: function() {

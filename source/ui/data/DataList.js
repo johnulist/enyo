@@ -39,6 +39,8 @@
 
 		//*@public
 		controlParentName: "page1",
+		
+		containerName: "scroller",
 
 		//*@public
 		classes: "enyo-data-list",
@@ -182,7 +184,7 @@
 					return idx;
 				}
 			} else {
-				var $c = this.createComponent({kind: this._childKind, model: rec, index: idx});
+				var $c = this.createComponent({kind: this.defaultKind, model: rec, index: idx});
 				$c.render();
 				if (!this.batching) {
 					this.reflow();
@@ -322,7 +324,7 @@
 
 		initComponents: function () {
 			this.inherited(arguments);
-			var $k = this._childKind;
+			var $k = this.defaultKind;
 			if (!enyo.hasMixin($k, "enyo.RowSupport")) {
 				enyo.applyMixin("enyo.RowSupport", $k);
 			}
