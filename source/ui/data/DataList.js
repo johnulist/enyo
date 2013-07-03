@@ -293,6 +293,21 @@
 			}
 		},
 		positionPageBefore: function (p) {
+			var $1 = this.getFirstPage();
+			// we only want to worry about moving the page up if there are
+			// indices to update
+			if ($1.children[0].index !== 0) {
+				var $r = this.orientation;
+				var $s = this.$.scroller;
+				// unlike when moving the page down we actually need to execute the
+				// update before moving the page so we can accurately calculate
+				// the size and move accordingly
+				this.updatePage(p, this.start, 0);
+			}
+			
+			
+			
+			/*
 			var $r = this.orientation;
 			var $t = $r == "v"? this.getHeight(p): this.getWidth(p);
 			var $s = this.$.scroller;
@@ -304,7 +319,7 @@
 				this.updatePage(p, this.start, 0);
 				this.end = $l.children[$l.children.length-1].index;
 				this.positionPageAfter($l, true);
-			}
+			}*/
 		},
 		updatePage: function (p, start, end) {
 			var $d = this.get("data");
@@ -336,6 +351,23 @@
 				}
 				this.updateBuffer();
 				return;
+			} else if ($s > $e) {
+				for (var $i=($p.children.length-1), c$, d$; (c$=$p.children[$i]) && (d$=$d[$s]) && $s>=$e; --$s, --$i) {
+					c$.index = $s;
+					c$.set("model", d$);
+					this.start = $s;
+				}
+				// if we're done updating and we didn't use all of the controls we currently
+				// have we need to remove the extras
+				if ($i >= 0) {
+					this.prune($p, 0, ($i+1));
+				}
+				$p.connectDom();
+				$p.renderReusingNode();
+				this.adjustPageSize($p);
+				// now if we ran out of active controls to use but the page size would allow us
+				// to add more we need to do that here
+				
 			}
 		}
 
