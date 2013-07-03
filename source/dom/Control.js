@@ -757,7 +757,7 @@ enyo.kind({
 		if (this.generated) {
 			this.disconnectChildrenDom();
 		}
-		this._node = this.node;
+		this._node = this.hasNode();
 		this.node = null;
 		this.generated = false;
 		this._domDisconnected = true;
