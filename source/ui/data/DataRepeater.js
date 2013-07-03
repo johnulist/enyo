@@ -96,71 +96,47 @@
 			}
 		},
 
-		// TODO:
 		reset: function () {
 			var $d = this.get("data");
 			this.destroyClientControls();
-			if ($d) {
-				enyo.forEach($d, this.add, this);
+			for (var $i=0, d$; (d$=$d[$i]); ++$i) {
+				this.add(d$, $i);
 			}
-		},
-
-		render: function () {
-			this.reset();
-			this.inherited(arguments);
 		},
 
 		//*@public
-		add: function (rec) {
-			if (!this.generated) {
-				return;
-			}
-			var $k = this.defaultKind;
-			var $c = this.createComponent({kind: $k, model: rec});
-			if (!this.batching) {
+		add: function (record, idx) {
+			var $c = this.createComponent({model: record, index: idx});
+			if (this.generated && !this.batching) {
 				$c.render();
 			}
 		},
 
 		//*@public
 		remove: function (idx) {
-			var $ch = this.get("active");
-			var $c = $ch[idx || (Math.abs($ch.length-1))];
+			var $g = this.getClientControls();
+			var $c = $g[idx || (Math.abs($g.length-1))];
 			if ($c) {
 				$c.destroy();
 			}
 		},
 
-		//*@public
 		update: function (idx) {
 			var $d = this.get("data");
-			var $ch = this.get("active");
-			var $c = $ch[idx];
-			if ($d && $c) {
+			var $g = this.getClientControls();
+			var $c = $g[idx];
+			if ($d[idx] && $c) {
 				$c.set("model", $d[idx]);
 			}
 		},
 
-		//*@public
 		prune: function () {
-			var $ch = this.get("active");
-			var l = this.length;
-			var $x = $ch.slice(l);
-			enyo.forEach($x, function (c) {
-				c.destroy();
-			});
+			var $g = this.getClientControls();
+			var $x = $g.slice(this.length);
+			for (var $i=0, c$; (c$=$x[$i]); ++$i) {
+				c$.destroy();
+			}
 		},
-
-		// ...........................
-		// COMPUTED PROPERTIES
-
-		//*@public
-		active: enyo.computed(function () {
-			return this.controlParent? this.controlParent.children: this.children;
-		}, "controlParent", {cached: true, defer: true}),
-
-		// ...........................
-		// PROTECTED METHODS
 
 		initContainer: function () {
 			var $c = this.get("containerOptions"), $n;
@@ -181,8 +157,8 @@
 		modelsAdded: function (sender, event) {
 			if (sender == this.controller) {
 				this.set("batching", true);
-				for (var $i=0, $m; ($m=event.models[$i]); ++$i) {
-					this.add($m.model, $m.index);
+				for (var $i=0, m$; (m$=event.models[$i]); ++$i) {
+					this.add(m$.model, m$.index);
 				}
 				this.set("batching", false);
 			}
@@ -196,8 +172,8 @@
 
 		modelsRemoved: function (sender, event) {
 			if (sender == this.controller) {
-				for (var $i=0, $m; ($m=event.models[$i]); ++$i) {
-					this.remove($m.index);
+				for (var $i=0, m$; (m$=event.models[$i]); ++$i) {
+					this.remove(m$.index);
 				}
 			}
 		},
