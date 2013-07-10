@@ -53,6 +53,9 @@
 		containerOptions: {
 			name: "scroller",
 			kind: "enyo.Scroller",
+			// strategyKind: "TransitionScrollStrategy",
+			// strategyKind: "TranslateScrollStrategy",
+			// strategyKind: "TouchScrollStrategy",
 			canGenerate: false,
 			classes: "enyo-fill enyo-data-list-scroller",
 			components: [
@@ -132,7 +135,9 @@
 		
 		disableChild: function (c$) {
 			c$.connectDom();
-			c$.removeNodeFromDom();
+			// c$.removeNodeFromDom();
+			c$._display = c$.getComputedStyleValue("display") || "block";
+			c$.applyStyle("display", "none");
 			c$.canGenerate = false;
 			c$.disabled = true;
 		},
@@ -141,7 +146,8 @@
 			c$.canGenerate = true;
 			c$.disabled = false;
 			c$.connectDom();
-			c$.addNodeToParent();
+			// c$.addNodeToParent();
+			c$.applyStyle("display", c$._display);
 		},
 		
 		add: function (record, idx) {
@@ -154,7 +160,7 @@
 		renderPage: function (p) {
 			this.controlParentName = p.name;
 			this.discoverControlParent();
-			if (this.length && this.end != this.length-1) {
+			if (this.length && this.end < this.length) {
 				var $d = this.get("data"), $i = this.end, r$;
 				for (; (r$=$d[$i]) && this.checkPage(p); ++$i) {
 					this.add(r$, $i);
@@ -166,7 +172,7 @@
 		
 		checkPage: function (p) {
 			var $r = this.orientation;
-			var $t = this.pageSizeMultiplier * $r == "v"? this.getHeight(): this.getWidth();
+			var $t = this.pageSizeMultiplier * ($r == "v"? this.getHeight(): this.getWidth());
 			return $t >= ($r == "v"? this.getPageHeight(p): this.getPageWidth(p));
 		},
 		
@@ -305,6 +311,7 @@
 					this.updatePage(p, this.end, Math.min(this.length, this.end + p.children.length));
 				}
 				this.start = $2.children[0].index;
+				// this.log("start: " + this.start + " end: " + this.end);
 			}
 		},
 		positionPageBefore: function (p) {
@@ -318,36 +325,23 @@
 				// update before moving the page so we can accurately calculate
 				// the size and move accordingly
 				var $b = this.start-1;
-				var $e = Math.max($b-p.children.length, 0);
+				var $e = Math.max($b-(p.children.length), 0);
 				this.updatePage(p, $b, $e);
-				var $t = $r == "v"? this.getPageHeight(p): this.getPageWidth(p);
+				// deliberately using getHeight/getWidth and not getPageHeight/getPageWidth
+				// because it will have already been updated by updatePage if necessary so
+				// we don't need to recompute it
+				var $t = $r == "v"? this.getHeight(p): this.getWidth(p);
 				var $b = ($r == "v"? this.getTop($1): this.getLeft($1)) - $t;
 				p.applyStyle($r == "v"? "top": "left", $b + ($b > 0? "px": ""));
-				// adjust the bottom page to meet the bottom of the top page accordingly
-				// this.positionPageAfter($1, true);
+				this.end = $1.children[$1.children.length-1].index+1;
 			}
-			
-			
-			
-			/*
-			var $r = this.orientation;
-			var $t = $r == "v"? this.getHeight(p): this.getWidth(p);
-			var $s = this.$.scroller;
-			var $l = this.getFirstPage();
-			if ($t <= ($r == "v"? $s.getScrollTop(): $s.getScrollLeft())) {
-				var $1 = this.getFirstPage();
-				var $b = this.start == 0? 0: $r == "v"? this.getTop($1) - $t: this.getLeft($1) - $t;
-				p.applyStyle($r == "v"? "top": "left", $b + ($b > 0? "px": ""));
-				this.updatePage(p, this.start, 0);
-				this.end = $l.children[$l.children.length-1].index;
-				this.positionPageAfter($l, true);
-			}*/
 		},
 		updatePage: function (p, start, end) {
 			var $d = this.get("data");
 			var $p = p;
 			var $s = start;
 			var $e = $s < end? end < (this.length-1)? end: (this.length-1): end;
+			var $r;
 			// for efficiency we ensure that no changes will be made to the dom until
 			// after we've adjusted all that we can
 			$p.disconnectDom();
@@ -363,14 +357,8 @@
 				// if we're done updating but we have extra children we need to remove them
 				if ($i < ($p.children.length-1)) {
 					this.prune($p, $i);
+					$r = true;
 				}
-				// now we need to go ahead and reconnect the dom and calculate some changes
-				// before we can know if we're done
-				$p.connectDom();
-				$p.renderReusingNode();
-				this.adjustPageSize($p);
-				this.updateBuffer();
-				return;
 			} else if ($s > $e) {
 				for (var $i=($p.children.length-1), c$, d$; (c$=$p.children[$i]) && (d$=$d[$s]) && $s>=$e; --$s, --$i) {
 					if (c$.disabled) {
@@ -379,15 +367,17 @@
 					c$.index = $s;
 					c$.set("model", d$);
 				}
-				this.start = $s;
+				this.start = $s+1;
 				if ($i > 0) {
 					this.prune($p, 0, $i);
+					$r = true;
 				}
-				$p.connectDom();
-				$p.renderReusingNode();
+			}
+			$p.connectDom();
+			$p.renderContent();
+			if ($r) {
 				this.adjustPageSize($p);
 				this.updateBuffer();
-				return
 			}
 		}
 
