@@ -57,8 +57,8 @@
 			classes: "enyo-fill enyo-data-list-scroller",
 			components: [
 				{name: "active", classes: "enyo-data-list-active", components: [
-					{name: "page1", classes: "enyo-data-list-page"},
-					{name: "page2", classes: "enyo-data-list-page"}
+					{name: "page1", classes: "enyo-data-list-page", style: "background-color: #d8d8d8;"},
+					{name: "page2", classes: "enyo-data-list-page", style: "background-color: #58d3f7;"}
 				]},
 				{name: "buffer", classes: "enyo-data-list-buffer"}
 			]
@@ -125,8 +125,23 @@
 		prune: function (p, i, e) {
 			var $t = p.children.slice(i, e);
 			for(var $i=0, c$; (c$=$t[$i]); ++$i) {
-				c$.destroy();
+				c$.set("model", null);
+				this.disableChild(c$);
 			}
+		},
+		
+		disableChild: function (c$) {
+			c$.connectDom();
+			c$.removeNodeFromDom();
+			c$.canGenerate = false;
+			c$.disabled = true;
+		},
+		
+		enableChild: function (c$) {
+			c$.canGenerate = true;
+			c$.disabled = false;
+			c$.connectDom();
+			c$.addNodeToParent();
 		},
 		
 		add: function (record, idx) {
@@ -143,8 +158,8 @@
 				var $d = this.get("data"), $i = this.end, r$;
 				for (; (r$=$d[$i]) && this.checkPage(p); ++$i) {
 					this.add(r$, $i);
-					this.end = $i;
 				}
+				this.end = $i;
 			}
 			this.adjustPageSize(p);
 		},
@@ -287,9 +302,9 @@
 				var $b = $r == "v"? this.getTop($2) + this.getHeight($2): this.getLeft($2) + this.getWidth($2);
 				p.applyStyle($r == "v"? "top": "left", $b + ($b > 0? "px": ""));
 				if (!noUpdate) {
-					this.updatePage(p, this.end, this.length);
+					this.updatePage(p, this.end, Math.min(this.length, this.end + p.children.length));
 				}
-				this.start = this.getFirstPage().children[0].index;
+				this.start = $2.children[0].index;
 			}
 		},
 		positionPageBefore: function (p) {
@@ -302,7 +317,14 @@
 				// unlike when moving the page down we actually need to execute the
 				// update before moving the page so we can accurately calculate
 				// the size and move accordingly
-				this.updatePage(p, this.start, 0);
+				var $b = this.start-1;
+				var $e = Math.max($b-p.children.length, 0);
+				this.updatePage(p, $b, $e);
+				var $t = $r == "v"? this.getPageHeight(p): this.getPageWidth(p);
+				var $b = ($r == "v"? this.getTop($1): this.getLeft($1)) - $t;
+				p.applyStyle($r == "v"? "top": "left", $b + ($b > 0? "px": ""));
+				// adjust the bottom page to meet the bottom of the top page accordingly
+				// this.positionPageAfter($1, true);
 			}
 			
 			
@@ -325,18 +347,21 @@
 			var $d = this.get("data");
 			var $p = p;
 			var $s = start;
-			var $e = end < (this.length-1)? end: (this.length-1);
+			var $e = $s < end? end < (this.length-1)? end: (this.length-1): end;
 			// for efficiency we ensure that no changes will be made to the dom until
 			// after we've adjusted all that we can
 			$p.disconnectDom();
 			if ($s < $e) {
 				for (var $i=0, c$, d$; (c$=$p.children[$i]) && (d$=$d[$s]) && $s<=$e; ++$s, ++$i) {
+					if (c$.disabled) {
+						this.enableChild(c$);
+					}
 					c$.index = $s;
 					c$.set("model", d$);
-					this.end = $s;
 				}
+				this.end = $s;
 				// if we're done updating but we have extra children we need to remove them
-				if ($i < (p.children.length-1)) {
+				if ($i < ($p.children.length-1)) {
 					this.prune($p, $i);
 				}
 				// now we need to go ahead and reconnect the dom and calculate some changes
@@ -344,30 +369,25 @@
 				$p.connectDom();
 				$p.renderReusingNode();
 				this.adjustPageSize($p);
-				// now if there were more available records to add and we have the ability to
-				// add them we add them now
-				if ($s<$e && this.checkPage($p)) {
-					this.renderPage($p);
-				}
 				this.updateBuffer();
 				return;
 			} else if ($s > $e) {
 				for (var $i=($p.children.length-1), c$, d$; (c$=$p.children[$i]) && (d$=$d[$s]) && $s>=$e; --$s, --$i) {
+					if (c$.disabled) {
+						this.enableChild(c$);
+					}
 					c$.index = $s;
 					c$.set("model", d$);
-					this.start = $s;
 				}
-				// if we're done updating and we didn't use all of the controls we currently
-				// have we need to remove the extras
-				if ($i >= 0) {
-					this.prune($p, 0, ($i+1));
+				this.start = $s;
+				if ($i > 0) {
+					this.prune($p, 0, $i);
 				}
 				$p.connectDom();
 				$p.renderReusingNode();
 				this.adjustPageSize($p);
-				// now if we ran out of active controls to use but the page size would allow us
-				// to add more we need to do that here
-				
+				this.updateBuffer();
+				return
 			}
 		}
 
