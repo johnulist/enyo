@@ -105,6 +105,7 @@ enyo.kind({
 		this.initProps(["id", "content", "src"]);
 	},
 	destroy: function() {
+		this.connectDom();
 		this.removeNodeFromDom();
 		enyo.Control.unregisterDomEvents(this.id);
 		this.inherited(arguments);
@@ -777,7 +778,9 @@ enyo.kind({
 			this.connectChildrenDom();
 			this.node = this._node;
 			this._node = null;
-			this.generated = true;
+			if (this.node) {
+				this.generated = true;
+			}
 			this._domDisconnected = false;
 		}
 	},
@@ -813,6 +816,9 @@ enyo.kind({
 		}
 	},
 	renderReusingNode: function () {
+		if (!this.canGenerate) {
+			return;
+		}
 		if (this.tag === null || this.generated) {
 			if (this.children.length) {
 				for (var i=0, c; (c=this.children[i]); ++i) {
