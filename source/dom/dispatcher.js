@@ -11,7 +11,7 @@
 		// these events come from window
 		windowEvents: ["resize", "load", "unload", "message", "hashchange"],
 		// these events come from css
-		cssEvents: ["webkitTransitionEnd", "transitionend"],
+		cssEvents: ["webkitTransitionEnd", "transitionend", "webkitAnimationEnd"],
 		// feature plugins (aka filters)
 		features: [],
 		connect: function() {
