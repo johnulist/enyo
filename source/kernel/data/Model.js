@@ -983,7 +983,7 @@
 					k$ = p$.remoteKey || $p;
 					v$ = $d[$p] || $d[k$];
 					// we do not run default data through the formatter
-					if (!v$ && !this._hasFetched && ($g[$p] || $g[k$])) {
+					if (!v$ && !this._hasFetched && enyo.exists(($g[$p] || $g[k$]))) {
 						v$ = $g[$p] || $g[k$];
 						if (enyo.isFunction(v$)) {
 							v$ = v$.call(this);
