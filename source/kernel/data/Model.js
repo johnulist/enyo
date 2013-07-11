@@ -412,8 +412,8 @@
 		chain.
 	*/
 	enyo.kind.postConstructors.push(function () {
-		if (this._isModel && enyo.store) {
-			enyo.store.initModel(this);
+		if (this._isModel) {
+			enyo.models.queue(this);
 		}
 	});
 

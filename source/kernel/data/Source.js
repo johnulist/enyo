@@ -200,6 +200,16 @@
 			options.method = "DELETE";
 			this.exec("destroy", options);
 		},
+		
+		//*@public
+		/**
+			Overload this method for specific needs with regards to requesting
+			a filtered query from the remote (or local) source. Accepts a constructor
+			for the kind of model being queried and any additional options.
+		*/
+		find: function (ctor, options) {
+			// TODO:
+		},
 		exec: function (which, options) {
 			var $options = enyo.only(this._ajaxOptions, options);
 			var $success = this.bindSafely("onSuccess", which, options);
