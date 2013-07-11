@@ -47,21 +47,25 @@
 		//*@public
 		classes: "enyo-data-list",
 		
-		pageSizeMultiplier: 2,
+		pageSizeMultiplier: 1.1,
+		
+		//*@public
+		/**
+			For debugging performance issues or to see where arbitrary page boundaries
+			are, set this flag to true.
+		*/
+		debugPageBoundaries: false,
 
 		//*@public
 		containerOptions: {
 			name: "scroller",
 			kind: "enyo.Scroller",
-			// strategyKind: "TransitionScrollStrategy",
-			// strategyKind: "TranslateScrollStrategy",
-			// strategyKind: "TouchScrollStrategy",
 			canGenerate: false,
 			classes: "enyo-fill enyo-data-list-scroller",
 			components: [
 				{name: "active", classes: "enyo-data-list-active", components: [
-					{name: "page1", classes: "enyo-data-list-page", style: "background-color: #d8d8d8;"},
-					{name: "page2", classes: "enyo-data-list-page", style: "background-color: #58d3f7;"}
+					{name: "page1", classes: "enyo-data-list-page"},
+					{name: "page2", classes: "enyo-data-list-page"}
 				]},
 				{name: "buffer", classes: "enyo-data-list-buffer"}
 			]
@@ -70,6 +74,10 @@
 		create: function () {
 			this.inherited(arguments);
 			this.orientation = this.orientation[0] == "v"? "v": "h";
+			if (this.debugPageBoundaries) {
+				this.$.page1.applyStyle("background-color", "#d8d8d8");
+				this.$.page2.applyStyle("background-color", "#58d3f7");
+			}
 		},
 
 		rendered: function () {
@@ -135,7 +143,6 @@
 		
 		disableChild: function (c$) {
 			c$.connectDom();
-			// c$.removeNodeFromDom();
 			c$._display = c$.getComputedStyleValue("display") || "block";
 			c$.applyStyle("display", "none");
 			c$.canGenerate = false;
@@ -146,7 +153,6 @@
 			c$.canGenerate = true;
 			c$.disabled = false;
 			c$.connectDom();
-			// c$.addNodeToParent();
 			c$.applyStyle("display", c$._display);
 		},
 		
@@ -267,6 +273,7 @@
 			if ($d) {
 				this[$d]();
 			}
+			return true;
 		},
 		getDirection: function () {
 			var $s = this.$.scroller;
@@ -363,6 +370,9 @@
 				for (var $i=($p.children.length-1), c$, d$; (c$=$p.children[$i]) && (d$=$d[$s]) && $s>=$e; --$s, --$i) {
 					if (c$.disabled) {
 						this.enableChild(c$);
+						// this means we need to recalculate the page size since we're
+						// re-enabling children
+						$r = true;
 					}
 					c$.index = $s;
 					c$.set("model", d$);
@@ -374,11 +384,20 @@
 				}
 			}
 			$p.connectDom();
-			$p.renderContent();
+			// $p.renderContent();
+			$p.renderReusingNode();
 			if ($r) {
 				this.adjustPageSize($p);
 				this.updateBuffer();
 			}
+		},
+		
+		initContainer: function () {
+			var $o = this.get("containerOptions"), $s = this.get("scrollerOptions");
+			if ($s) {
+				enyo.mixin($o, $s, {exists: true});
+			}
+			this.inherited(arguments);
 		}
 
 	});
