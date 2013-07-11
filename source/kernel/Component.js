@@ -129,6 +129,9 @@ enyo.kind({
 	*/
 	destroy: function() {
 		this.destroyComponents();
+		if (this.owner) {
+			this.owner.removeComponent(this);
+		}
 		this.setOwner(null);
 		this.inherited(arguments);
 		this.stopAllJobs();
