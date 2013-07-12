@@ -130,6 +130,7 @@
 				// at this point there is most likely overlap of the pages but
 				// if so it will be out of the visible region
 				this.resetPagePositions();
+				this.$.scroller.rendered();
 			}
 		},
 		
@@ -393,11 +394,19 @@
 		},
 		
 		initContainer: function () {
-			var $o = this.get("containerOptions"), $s = this.get("scrollerOptions");
+			var $o = enyo.clone(this.get("containerOptions")), $s = this.get("scrollerOptions");
 			if ($s) {
 				enyo.mixin($o, $s, {exists: true});
 			}
+			this.set("containerOptions", $o);
 			this.inherited(arguments);
+		},
+		
+		//*@public
+		batchingChanged: function (prev, val) {
+			if (this.generated && false === val) {
+				this.$.scroller.rendered();
+			}
 		}
 
 	});
